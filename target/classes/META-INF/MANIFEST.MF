@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1522362976624
+Bnd-LastModified: 1522695433858
 Build-Jdk: 1.8.0_131
 Built-By: bsettle
 Bundle-Activator: org.cytoscape.sana.sana_app.internal.CyActivator

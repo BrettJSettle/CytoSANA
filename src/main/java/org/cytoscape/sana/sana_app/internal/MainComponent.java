@@ -9,8 +9,13 @@ import javax.swing.JFrame;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -21,8 +26,10 @@ import java.util.List;
 import javax.swing.JLabel;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.BorderFactory;
+import javax.swing.FocusManager;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.SpinnerNumberModel;
@@ -41,29 +48,62 @@ import org.cytoscape.sana.sana_app.internal.rest.parameters.VisualizeParameters;
 import org.cytoscape.sana.sana_app.internal.task.PerformAlignmentTaskFactory;
 import org.cytoscape.sana.sana_app.internal.task.PerformVisualizeTask;
 import org.cytoscape.sana.sana_app.internal.util.SanaAlignmentUtil;
+import org.cytoscape.sana.sana_app.internal.util.SanaUtil;
 import org.cytoscape.sana.sana_app.internal.util.SanaAlignmentUtil.InvalidParametersException;
 import org.cytoscape.work.TaskIterator;
 
 public class MainComponent extends Unloadable implements ActionListener, PopupMenuListener, ItemListener {
+
+	public class TextFieldWithPrompt extends JTextField {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		private String placeholder;
+		public  TextFieldWithPrompt(String placeholder) {
+			this.placeholder = placeholder;
+		}
+		@Override
+		protected void paintComponent(java.awt.Graphics g) {
+			super.paintComponent(g);
+
+			if (getText().isEmpty() && !(FocusManager.getCurrentKeyboardFocusManager().getFocusOwner() == this)) {
+				Graphics2D g2 = (Graphics2D) g.create();
+				g2.setColor(Color.GRAY);
+				g2.setFont(getFont().deriveFont(Font.ITALIC));
+				RenderingHints rh = new RenderingHints(
+			             RenderingHints.KEY_TEXT_ANTIALIASING,
+			             RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			    g2.setRenderingHints(rh);
+				FontMetrics fm = getFontMetrics(g2.getFont());
+				
+				g2.drawString(placeholder, 5, fm.getHeight());
+				g2.dispose();
+			}
+		}
+	}
 
 	/**
 	 * Create the panel.
 	 */
 	private HashMap<String, CyNetwork> network_map = new HashMap<String, CyNetwork>();
 
-	JComboBox<String> comboBox1, comboBox2;
+	private JComboBox<String> comboBox1, comboBox2;
 	private JToggleButton toggleEdgesButton;
 	private JToggleButton selectNetwork1Toggle, selectNetwork2Toggle;
-	JTabbedPane panes;
-	JPanel panel1, visualizePanel;
-	JButton alignButton, visualizeButton;
+	private JTabbedPane panes;
+	JPanel panel1;
+
+	private JPanel visualizePanel;
+	private JButton alignButton, visualizeButton;
 
 	/* SANA */
-	JSpinner timeSpinner, alphaSpinner, betaSpinner;
-	JCheckBox nodesHaveTypesCheckbox;
+	private JSpinner timeSpinner, alphaSpinner, betaSpinner;
+	private TextFieldWithPrompt seedPrompt;
+	private JCheckBox nodesHaveTypesCheckbox;
 
 	/* Visualization */
-	JCheckBox overlapCheckBox;
+	private JCheckBox overlapCheckBox;
 
 	MainComponent() {
 		super();
@@ -127,28 +167,35 @@ public class MainComponent extends Unloadable implements ActionListener, PopupMe
 		panel.setLayout(gridBagLayout);
 
 		timeSpinner = new JSpinner(new SpinnerNumberModel(new Integer(1), new Integer(0), null, new Integer(1)));
+		timeSpinner.setToolTipText("The number of minutes to run SANA. Must be non-zero, no upper limit.");
 		DefaultEditor editor = (DefaultEditor) timeSpinner.getEditor();
 		JFormattedTextField jftf = ((DefaultEditor) editor).getTextField();
 		jftf.setColumns(5);
 
 		alphaSpinner = new JSpinner(
 				new SpinnerNumberModel(new Integer(1), new Integer(0), new Integer(1), new Double(.01)));
+		alphaSpinner.setToolTipText("Trade off between biological (alpha = 1) and topological (alpha = 0) measures. Range: [0, 1].");
 		editor = (DefaultEditor) alphaSpinner.getEditor();
 		jftf = ((DefaultEditor) editor).getTextField();
 		jftf.setColumns(5);
 
-		betaSpinner = new JSpinner();
-		betaSpinner.setModel(new SpinnerNumberModel(new Integer(0), new Integer(0), new Integer(1), new Double(.1)));
+		betaSpinner = new JSpinner(new SpinnerNumberModel(new Integer(0), new Integer(0), new Integer(1), new Double(.1)));
+		betaSpinner.setToolTipText("Same as alpha but with topological and biological scores balanced according to size. Range: [0, 1]");
 		editor = (DefaultEditor) betaSpinner.getEditor();
 		jftf = ((DefaultEditor) editor).getTextField();
 		jftf.setColumns(5);
 
 		nodesHaveTypesCheckbox = new JCheckBox("Nodes have types");
+		nodesHaveTypesCheckbox.setToolTipText("Only nodes of the same type can be aligned. Requires networks to be bipartite.");
+		
+		seedPrompt = new TextFieldWithPrompt("RANDOM");
+		seedPrompt.setToolTipText("Provide an optional seed for SANA. If empty, a random seed is generated.");
 
 		addRow(panel, "Time Limit (minutes): ", timeSpinner, 0);
 		addRow(panel, "Alpha: ", alphaSpinner, 1);
 		addRow(panel, "Beta: ", betaSpinner, 2);
 		addRow(panel, "", nodesHaveTypesCheckbox, 3);
+		addRow(panel, "Seed", seedPrompt, 4);
 
 		return panel;
 	}
@@ -336,9 +383,6 @@ public class MainComponent extends Unloadable implements ActionListener, PopupMe
 
 	}
 
-	
-
-	
 	private AlignmentParameters getAlignmentParameters(CyNetwork net1, CyNetwork net2)
 			throws InvalidParametersException {
 
@@ -346,17 +390,22 @@ public class MainComponent extends Unloadable implements ActionListener, PopupMe
 		float a = (int) alphaSpinner.getValue();
 		float b = (int) betaSpinner.getValue();
 		boolean nodesHaveTypes = nodesHaveTypesCheckbox.isSelected();
+		String seedStr = seedPrompt.getText();
+		Float seed = null;
+		try{
+			seed = Float.parseFloat(seedStr);
+		}catch(Exception e){
+			
+		}
 
 		for (CyNetwork net : new CyNetwork[] { net1, net2 }) {
 			SanaAlignmentUtil.validateNetwork(net, nodesHaveTypes);
 		}
-		SanaParameters params = new SanaParameters(t, a, b, nodesHaveTypes);
+		SanaParameters params = new SanaParameters(t, a, b, nodesHaveTypes, seed);
 		AlignmentParameters args = new AlignmentParameters(net1.getSUID(), net2.getSUID(), params);
 
 		return args;
 	}
-	
-	
 
 	@Override
 	public void actionPerformed(ActionEvent ev) {
@@ -489,7 +538,7 @@ public class MainComponent extends Unloadable implements ActionListener, PopupMe
 
 	public static void main(String[] args) {
 		MainComponent c = new MainComponent();
-		JPanel panel = c.getVisualizationPanel();
+		JPanel panel = c.makeAlignmentPanel();
 		JFrame f = new JFrame();
 		f.add(panel);
 		f.setSize(300, 600);

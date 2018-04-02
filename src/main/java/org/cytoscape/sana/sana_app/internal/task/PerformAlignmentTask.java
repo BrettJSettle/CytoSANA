@@ -39,13 +39,14 @@ import org.cytoscape.sana.sana_app.internal.rest.parameters.AlignmentData;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.json.JSONResult;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class PerformAlignmentTask extends AbstractAlignmentTask implements ObservableTask {
+public class PerformAlignmentTask extends AbstractTask implements ObservableTask {
 
 	private HashMap<Long, Long> edgeList;
 	private StringEntity cx;
@@ -65,21 +66,20 @@ public class PerformAlignmentTask extends AbstractAlignmentTask implements Obser
 	}
 
 	public PerformAlignmentTask(AlignmentData data) throws AlignmentException {
-		super(data.params);
 		this.data = data;
 
 		if (data.netA == null) {
-			throw new AlignmentException("Cannot get network A with suid " + common.networkAsuid);
+			throw new AlignmentException("Cannot get network A with suid " + data.params.networkAsuid);
 		}
 		if (data.netB == null) {
-			throw new AlignmentException("Cannot get network B with suid " + common.networkBsuid);
+			throw new AlignmentException("Cannot get network B with suid " + data.params.networkBsuid);
 		}
 
 	}
 
 	private HttpPost createPost() throws Exception {
 		URIBuilder builder = new URIBuilder(data.url);
-		Map<String, String> map = common.sana_args.getQueryParameters();
+		Map<String, String> map = data.params.sana_args.getQueryParameters();
 		for (String s : map.keySet()) {
 			builder.addParameter(s, map.get(s));
 		}

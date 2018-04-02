@@ -1,5 +1,6 @@
 package org.cytoscape.sana.sana_app.internal;
 
+import org.cytoscape.sana.sana_app.internal.util.SanaUtil;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskIterator;

@@ -30,7 +30,7 @@ public class SanaTaskMonitor implements TaskMonitor
         switch(level)
         {
             case ERROR:
-                	SanaUtil.errorbox(s);
+                	//SanaUtil.errorbox(s);
                 break;
 		default:
 			break;

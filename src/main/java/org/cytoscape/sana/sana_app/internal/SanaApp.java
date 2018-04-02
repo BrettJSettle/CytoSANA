@@ -15,7 +15,6 @@ public final class SanaApp extends AbstractCySwingApp implements SetCurrentNetwo
 
 	public CyNetworkViewWriterFactory writerFactory;
 	public static ResourceManager rm;
-	public ContextMenu contextmenu;
 
 	private boolean shuttingDown = false;
 
@@ -97,14 +96,10 @@ public final class SanaApp extends AbstractCySwingApp implements SetCurrentNetwo
 		rm.cyapp.addAction(m);
 	}
 
-	public void addViewContextMenuEntry(String submenu, String label, ContextMenuAction action) {
-		contextmenu.addNetworkViewEntry(submenu, label, action);
-	}
 
 	private void install() {
 
 		mainPanel = new SanaMainPanel();
-		contextmenu = new ContextMenu();
 
 	}
 
@@ -119,7 +114,6 @@ public final class SanaApp extends AbstractCySwingApp implements SetCurrentNetwo
 
 		mainPanel = null;
 		// sessmgr = null;
-		contextmenu = null;
 
 	}
 

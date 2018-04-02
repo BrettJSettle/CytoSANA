@@ -20,26 +20,34 @@ public class SanaParameters {
 
 	@ApiModelProperty(value = "Network is a bipartite graph with two distinct node types", example = "false", required = false)
 	public Boolean nodesHaveTypes;
+	
+	@ApiModelProperty(value = "Serves as a random seed in SANA.", example = "RANDOM", required = false)
+	public Float seed;
+	
+	
 
-	public SanaParameters(final int timeLimit, final float alpha, final float beta, final boolean nodesHaveTypes) {
+	public SanaParameters(final Integer timeLimit, final Float alpha, final Float beta, final Boolean nodesHaveTypes, final Float seed) {
 		this.time = timeLimit;
 		this.alpha = alpha;
 		this.beta = beta;
 		this.nodesHaveTypes = nodesHaveTypes;
+		this.seed = seed;
 	}
 
 	@ApiModelProperty(hidden = true)
 	public Map<String, String> getQueryParameters() {
 		HashMap<String, String> map = new HashMap<String, String>();
 		if (time != null)
-			map.put("t", String.valueOf(time));
+			map.put("-t", String.valueOf(time));
 		if (alpha != null)
-			map.put("alpha", String.valueOf(alpha));
+			map.put("-alpha", String.valueOf(alpha));
 		if (beta != null)
-			map.put("beta", String.valueOf(beta));
+			map.put("-beta", String.valueOf(beta));
 		if (nodesHaveTypes != null)
-			map.put("nodes-have-types", String.valueOf(nodesHaveTypes));
-
+			map.put("-nodes-have-types", String.valueOf(nodesHaveTypes));
+		if (seed != null){
+			map.put("-seed", String.valueOf(seed));
+		}
 		return map;
 	}
 
