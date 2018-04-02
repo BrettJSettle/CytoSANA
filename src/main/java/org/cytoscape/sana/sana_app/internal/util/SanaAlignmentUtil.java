@@ -98,7 +98,11 @@ public final class SanaAlignmentUtil {
 	}
 
 	public static void validateNetwork(CyNetwork net, Boolean nodesHaveTypes) throws InvalidParametersException {
-		String name = net.getDefaultNetworkTable().getRow(net.getSUID()).get(CyNetwork.NAME, String.class);
+		if (net == null){
+			throw new InvalidParametersException(
+					"Network is null.");
+		}
+		String name = net.getRow(net).get(CyNetwork.NAME, String.class);
 		if (nodesHaveTypes != null && nodesHaveTypes) {
 			if (!networkIsBipartite(net)) {
 				throw new InvalidParametersException(

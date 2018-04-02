@@ -21,7 +21,7 @@ public class SanaParameters {
 	@ApiModelProperty(value = "Network is a bipartite graph with two distinct node types", example = "false", required = false)
 	public Boolean nodesHaveTypes;
 	
-	@ApiModelProperty(value = "Serves as a random seed in SANA.", example = "RANDOM", required = false)
+	@ApiModelProperty(value = "Serves as a random seed in SANA.", example = "0", required = false)
 	public Float seed;
 	
 	

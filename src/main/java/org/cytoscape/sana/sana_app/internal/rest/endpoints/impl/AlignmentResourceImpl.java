@@ -81,8 +81,12 @@ public class AlignmentResourceImpl implements AlignmentResource {
 //		if (params.sana_args == null){
 //			params.sana_args = new SanaParameters(1, 1, 0, false);
 //		}
-		System.out.println(params.sana_args);
-
+//		System.out.println(params.sana_args);
+		if (netA == null || netB == null) {
+			return buildErrorResponse(Response.Status.BAD_REQUEST, INVALID_PARAMETERS_CODE,
+					new Exception("Invalid network SUIDs (" + params.networkAsuid + ", " + params.networkBsuid + ")"));
+		}
+		
 		for (CyNetwork net : new CyNetwork[] { netA, netB }) {
 			try {
 				SanaAlignmentUtil.validateNetwork(net, params.sana_args.nodesHaveTypes);
@@ -90,10 +94,7 @@ public class AlignmentResourceImpl implements AlignmentResource {
 				return buildErrorResponse(Response.Status.BAD_REQUEST, INVALID_PARAMETERS_CODE, e);
 			}
 		}
-		if (netA == null || netB == null) {
-			return buildErrorResponse(Response.Status.BAD_REQUEST, INVALID_PARAMETERS_CODE,
-					new Exception("Invalid SUIDs (" + params.networkAsuid + ", " + params.networkBsuid + ")"));
-		}
+		
 
 		PerformAlignmentTaskFactory tf = new PerformAlignmentTaskFactory(netA, netB, params);
 
@@ -134,6 +135,13 @@ public class AlignmentResourceImpl implements AlignmentResource {
 		MergedNetworkLayoutTask task = new MergedNetworkLayoutTask(network, sourceNetwork, params.overlap);
 		String name = networkTable.getRow(network.getSUID()).get(CyNetwork.NAME, String.class);
 		TaskIterator ti = new TaskIterator(task);
+		
+		if (params.showMappingEdges == true) {
+			SanaAlignmentUtil.generateMappingEdges(network);
+		} else {
+			SanaAlignmentUtil.removeMappingEdges(network);
+		}
+		
 		SanaApp.rm.taskmgr.execute(String.format("Visualizing %s", name), ti, null);
 		return Response.status(Response.Status.OK).type(MediaType.APPLICATION_JSON).build();
 	}
