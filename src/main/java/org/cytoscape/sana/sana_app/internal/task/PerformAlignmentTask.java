@@ -1,7 +1,5 @@
 package org.cytoscape.sana.sana_app.internal.task;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -9,8 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Scanner;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -50,7 +46,6 @@ public class PerformAlignmentTask extends AbstractTask implements ObservableTask
 
 	private HashMap<Long, Long> edgeList;
 	private StringEntity cx;
-	private static final boolean DEBUG = false;
 	private final AlignmentData data;
 	private HashMap<Long, CyNode> suidNodeMap = new HashMap<Long, CyNode>();
 
@@ -97,7 +92,6 @@ public class PerformAlignmentTask extends AbstractTask implements ObservableTask
 		return String.format("%s - %s SANA alignment", name1, name2);
 	}
 
-	@SuppressWarnings("resource")
 	@Override
 	public void run(TaskMonitor mon) throws Exception {
 
@@ -111,24 +105,13 @@ public class PerformAlignmentTask extends AbstractTask implements ObservableTask
 		}
 
 		String output = "";
-		if (!DEBUG) {
-			HttpPost post = createPost();
+		HttpPost post = createPost();
 
-			HttpClient client = HttpClients.createDefault();
-			HttpResponse response = client.execute(post);
-			HttpEntity entity = response.getEntity();
-			output = entity != null ? EntityUtils.toString(entity) : null;
+		HttpClient client = HttpClients.createDefault();
+		HttpResponse response = client.execute(post);
+		HttpEntity entity = response.getEntity();
+		output = entity != null ? EntityUtils.toString(entity) : null;
 
-			File f = new File("/Users/bsettle/Desktop/sana_output.txt");
-			f.createNewFile();
-			FileOutputStream fs = new FileOutputStream(f);
-			fs.write(output.getBytes());
-			fs.close();
-		} else {
-
-			File f = new File("/Users/bsettle/Desktop/sana_output.txt");
-			output = new Scanner(f).useDelimiter("\\Z").next();
-		}
 		if (cancelled)
 			return;
 
@@ -330,7 +313,7 @@ public class PerformAlignmentTask extends AbstractTask implements ObservableTask
 			cloneNodeLocations(src, network, nodeMap);
 
 			network.getDefaultNetworkTable().getRow(network.getSUID()).set(CyNetwork.NAME, srcName + " - copy");
-			
+
 			srcSUIDList.add(network.getSUID());
 			networkID++;
 		}

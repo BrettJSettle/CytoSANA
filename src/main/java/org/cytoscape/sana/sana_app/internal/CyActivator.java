@@ -17,7 +17,7 @@ public class CyActivator extends AbstractCyActivator {
 	public static CxTaskFactoryManager tfManager;
 	private SanaApp app;
 	public final static String SANA_URL_PROPERTY = "sana.url";
-	private final static String SANA_URL = "http://v1.sana.cytoscape.io";
+	private final static String SANA_URL = "http://v1.sana.test.cytoscape.io";
 	public static Properties cyProps;
 
 	private ServiceTracker ciResponseFactoryTracker = null;
